@@ -94,6 +94,9 @@ export default function Home() {
               <MenuItem value="ico">ICO</MenuItem>
               <MenuItem value="png">PNG</MenuItem>
               <MenuItem value="jpeg">JPEG</MenuItem>
+              <MenuItem value="webp">WEBP</MenuItem>
+              <MenuItem value="tiff">TIFF</MenuItem>
+              <MenuItem value="gif">GIF</MenuItem>
             </Select>
           </FormControl>
         </Box>

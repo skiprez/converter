@@ -12,13 +12,13 @@ export async function POST(req) {
     }
 
     const buffer = Buffer.from(image.split(',')[1], 'base64');
-    const pngBuffer = await sharp(buffer).png().toBuffer();
+    const tiffBuffer = await sharp(buffer).tiff().toBuffer();
 
-    return new Response(pngBuffer, {
+    return new Response(tiffBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'image/png',
-        'Content-Disposition': 'attachment; filename=your_image_converted.png',
+        'Content-Type': 'image/tiff',
+        'Content-Disposition': 'attachment; filename=your_image_converted.tiff',
       },
     });
   } catch (error) {

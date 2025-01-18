@@ -12,7 +12,7 @@ export async function POST(req) {
     }
 
     const buffer = Buffer.from(image.split(',')[1], 'base64');
-    const webpBuffer = await sharp(buffer).resize(256, 256).webp().toBuffer();
+    const webpBuffer = await sharp(buffer).webp().toBuffer();
 
     return new Response(webpBuffer, {
       status: 200,
