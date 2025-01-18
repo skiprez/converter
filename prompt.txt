@@ -1,0 +1,324 @@
+page.js
+'use client';
+
+import { useState } from 'react';
+import { Button, TextField, Typography, Box, CircularProgress, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { MdCloudUpload, MdCached, MdDownloadDone } from 'react-icons/md';
+
+export default function Home() {
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [conversionType, setConversionType] = useState('ico');
+  const [convertedImage, setConvertedImage] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => setImage(reader.result);
+    reader.readAsDataURL(file);
+    setConvertedImage(null);  
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!image) {
+      alert('Please upload an image');
+      return;
+    }
+
+    setLoading(true);
+
+    const response = await fetch(`/api/convert-to-${conversionType}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+    });
+
+    setLoading(false);
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setConvertedImage(url);
+    } else {
+      alert('Failed to convert the image');
+    }
+  };
+
+  const handleConversionChange = (e) => {
+    setConversionType(e.target.value);
+  };
+
+  return (
+    <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-300">
+      <Typography variant="h4" className="font-semibold mb-6 text-center text-gray-800">
+        Image Conversion Tool
+      </Typography>
+
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-md bg-gray-200 p-8 rounded-xl shadow-xl">
+        {/* Conversion Type Select */}
+        <Box className="w-full mb-4">
+          <FormControl fullWidth variant="outlined">
+            <InputLabel>Conversion Type</InputLabel>
+            <Select
+              value={conversionType}
+              onChange={handleConversionChange}
+              label="Conversion Type"
+              className="text-gray-800"
+            >
+              <MenuItem value="ico">ICO</MenuItem>
+              <MenuItem value="png">PNG</MenuItem>
+              <MenuItem value="jpeg">JPEG</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* File Input */}
+        <Box className="w-full mb-4">
+          <TextField
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            fullWidth
+            variant="outlined"
+            helperText="Select an image to convert"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              startAdornment: (
+                <MdCloudUpload size={24} style={{ color: '#7f5aff', marginRight: '8px' }} />
+              ),
+            }}
+            className="border-2 border-gray-300 focus:border-purple-500"
+          />
+        </Box>
+
+        {/* Submit Button */}
+        <Box className="w-full flex justify-center">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            fullWidth
+            sx={{
+              padding: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: '#7f5aff', // pastel purple
+              '&:hover': { backgroundColor: '#6a42d3' },
+              position: 'relative',
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={24} sx={{ position: 'absolute' }} />
+            ) : (
+              <>
+                <MdCached size={24} style={{ marginRight: '8px' }} />
+                Convert
+              </>
+            )}
+          </Button>
+        </Box>
+      </form>
+
+      {/* Success Message and Download Link */}
+      {convertedImage && !loading && (
+        <Box mt={4} className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-md">
+          <MdDownloadDone size={40} style={{ color: '#66bb6a' }} />
+          <Typography variant="h6" className="ml-2 text-green-500 font-semibold">
+            Conversion Complete! Click below to download.
+          </Typography>
+          <Button
+            variant="contained"
+            color="success"
+            href={convertedImage}
+            download={`converted.${conversionType}`}
+            sx={{
+              marginTop: '10px',
+              padding: '10px 20px',
+              textTransform: 'none',
+              backgroundColor: '#66bb6a',
+              '&:hover': { backgroundColor: '#388e3c' },
+            }}
+          >
+            Download Converted Image
+          </Button>
+        </Box>
+      )}
+    </main>
+  );
+}
+
+layout.js
+import "./globals.css";
+
+export const metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
+
+api/convert-to-ico/route.js
+import sharp from 'sharp';
+import toIco from 'image-to-ico';
+
+export async function POST(req) {
+  try {
+    const { image } = await req.json();
+
+    if (!image) {
+      return new Response(JSON.stringify({ error: 'Image is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const buffer = Buffer.from(image.split(',')[1], 'base64');
+    const pngBuffer = await sharp(buffer).resize(64, 64).png().toBuffer();
+    const icoBuffer = await toIco([pngBuffer]);
+
+    return new Response(icoBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/x-icon',
+        'Content-Disposition': 'attachment; filename=your_image_converted.ico',
+      },
+    });
+  } catch (error) {
+    console.error(error.message);
+    return new Response(
+      JSON.stringify({ error: 'Failed to process the image' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+api/convert-to-png/route.js
+import sharp from 'sharp';
+
+export async function POST(req) {
+  try {
+    const { image } = await req.json();
+
+    if (!image) {
+      return new Response(JSON.stringify({ error: 'Image is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const buffer = Buffer.from(image.split(',')[1], 'base64');
+    const pngBuffer = await sharp(buffer).resize(256, 256).png().toBuffer();
+
+    return new Response(pngBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/png',
+        'Content-Disposition': 'attachment; filename=your_image_converted.png',
+      },
+    });
+  } catch (error) {
+    console.error(error.message);
+    return new Response(
+      JSON.stringify({ error: 'Failed to process the image' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+api/convert-to-jpeg/route.js
+import sharp from 'sharp';
+
+export async function POST(req) {
+  try {
+    const { image } = await req.json();
+
+    if (!image) {
+      return new Response(JSON.stringify({ error: 'Image is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const buffer = Buffer.from(image.split(',')[1], 'base64');
+    const jpegBuffer = await sharp(buffer).resize(256, 256).jpeg().toBuffer();
+
+    return new Response(jpegBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Content-Disposition': 'attachment; filename=your_image_converted.jpeg',
+      },
+    });
+  } catch (error) {
+    console.error(error.message);
+    return new Response(
+      JSON.stringify({ error: 'Failed to process the image' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+
+api/convert-to-webp/route.js
+import sharp from 'sharp';
+
+export async function POST(req) {
+  try {
+    const { image } = await req.json();
+
+    if (!image) {
+      return new Response(JSON.stringify({ error: 'Image is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const buffer = Buffer.from(image.split(',')[1], 'base64');
+    const webpBuffer = await sharp(buffer).resize(256, 256).webp().toBuffer();
+
+    return new Response(webpBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/webp',
+        'Content-Disposition': 'attachment; filename=your_image_converted.webp',
+      },
+    });
+  } catch (error) {
+    console.error(error.message);
+    return new Response(
+      JSON.stringify({ error: 'Failed to process the image' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+
+My supabase database schema:
+table1: payments
+columns in payments table: id type uuid, user_id type uuid, amont type number, payment_date type date, status type text
+table2: subscriptions
+columns in subscriptrioins: id typr uuid, user_id type uuid, start_date type date, end_date type date, subscription_type type text
+table3: users
+columns in users: id type uuid, email type text, subscription_type type text, conversion_count type int4, trial_expiary type date 
+
+and with thi si want to implement this database to work its an supabase database and i want to utilize stripe as my methode to do this subscription model please give me full modiefied files and new ones that i need to complete this project include the env file if needed

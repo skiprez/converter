@@ -9,15 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mui/material": "^6.4.0",
+    "@supabase/supabase-js": "^2.47.16",
+    "image-to-ico": "^1.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "next": "15.1.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.1.5"
+    "react-icons": "^5.4.0",
+    "sharp": "^0.33.5",
+    "stripe": "^17.5.0",
+    "supabase": "^2.6.8"
   },
   "devDependencies": {
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "@eslint/eslintrc": "^3",
     "eslint": "^9",
     "eslint-config-next": "15.1.5",
-    "@eslint/eslintrc": "^3"
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1"
   }
 }
