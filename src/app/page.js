@@ -76,9 +76,9 @@ export default function Home() {
         </div>
       </div>
       
-      <Typography variant="h4" className="font-semibold mb-6 text-center text-gray-800 z-[1]">
+      <p className="font-bold text-4xl mb-6 text-center text-gray-800 z-[1]">
         Image Conversion Tool
-      </Typography>
+      </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-md bg-gray-200 p-8 rounded-xl shadow-xl z-[1]">
         {/* Conversion Type Select */}
@@ -149,7 +149,7 @@ export default function Home() {
 
       {/* Success Message and Download Link */}
       {convertedImage && !loading && (
-        <Box mt={4} className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-md">
+        <Box mt={4} className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-md z-[1]">
           <MdDownloadDone size={40} style={{ color: '#66bb6a' }} />
           <Typography variant="h6" className="ml-2 text-green-500 font-semibold">
             Conversion Complete! Click below to download.
