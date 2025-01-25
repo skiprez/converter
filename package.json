@@ -11,6 +11,7 @@
   "dependencies": {
     "@mui/material": "^6.4.0",
     "@supabase/supabase-js": "^2.47.16",
+    "framer-motion": "^12.0.5",
     "image-to-ico": "^1.0.1",
     "jsonwebtoken": "^9.0.2",
     "next": "15.1.5",

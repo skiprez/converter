@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, Typography, Box, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { MdCloudUpload, MdCached, MdDownloadDone } from 'react-icons/md';
 import { useDropzone } from 'react-dropzone';
+import { motion } from 'framer-motion';
 
 export default function Home() {
   const [image, setImage] = useState(null);
@@ -61,106 +62,100 @@ export default function Home() {
           {/* Multiple circle divs */}
           <div className="circle circle1"></div>
           <div className="circle circle2"></div>
-          <div className="circle circle1"></div>
-          <div className="circle circle6"></div>
-          <div className="circle circle6"></div>
-          <div className="circle circle1"></div>
-          <div className="circle circle1"></div>
-          <div className="circle circle3"></div>
-          <div className="circle circle3"></div>
-          <div className="circle circle2"></div>
-          <div className="circle circle2"></div>
-          <div className="circle circle2"></div>
-          <div className="circle circle3"></div>
           <div className="circle circle3"></div>
           <div className="circle circle4"></div>
-          <div className="circle circle1"></div>
-          <div className="circle circle1"></div>
           <div className="circle circle5"></div>
           <div className="circle circle6"></div>
         </div>
       </div>
       
-      <p className="font-bold text-4xl mb-6 text-center text-gray-800 z-[1]">
-        Image Conversion Tool
-      </p>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center gap-6 w-full max-w-md bg-gray-200 p-8 rounded-xl shadow-xl z-[1]"
+      >
+        <p className="font-bold text-4xl mb-6 text-center text-gray-800 z-[1]">
+          Image Conversion Tool
+        </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-md bg-gray-200 p-8 rounded-xl shadow-xl z-[1]">
-        {/* Conversion Type Select */}
-        <Box className="w-full mb-4">
-          <FormControl fullWidth variant="outlined">
-            <InputLabel>Conversion Type</InputLabel>
-            <Select
-              value={conversionType}
-              onChange={(e) => setConversionType(e.target.value)}
-              label="Conversion Type"
-              className="text-gray-800"
-            >
-              <MenuItem value="ico">ICO</MenuItem>
-              <MenuItem value="png">PNG</MenuItem>
-              <MenuItem value="jpeg">JPEG</MenuItem>
-              <MenuItem value="webp">WEBP</MenuItem>
-              <MenuItem value="tiff">TIFF</MenuItem>
-              <MenuItem value="gif">GIF</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full">
+          {/* Conversion Type Select */}
+          <Box className="w-full mb-4">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel>Conversion Type</InputLabel>
+              <Select
+                value={conversionType}
+                onChange={(e) => setConversionType(e.target.value)}
+                label="Conversion Type"
+                className="text-gray-800"
+              >
+                <MenuItem value="ico">ICO</MenuItem>
+                <MenuItem value="png">PNG</MenuItem>
+                <MenuItem value="jpeg">JPEG</MenuItem>
+                <MenuItem value="webp">WEBP</MenuItem>
+                <MenuItem value="tiff">TIFF</MenuItem>
+                <MenuItem value="gif">GIF</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
-        {/* File Input */}
-        <Box className="w-full mb-4">
-          <div {...getRootProps({ className: 'dropzone flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4 rounded-md cursor-pointer' })}>
-            <input {...getInputProps()} />
-            <MdCloudUpload size={48} style={{ color: '#7f5aff', marginBottom: '8px' }} />
-            <Typography variant="body1" color="textSecondary">Drag 'n' drop some files here, or click to select files</Typography>
-          </div>
-          {fileName && (
-            <Typography variant="body2" color="textPrimary" className="mt-2">
-              File uploaded: {fileName}
-            </Typography>
+          {/* File Input */}
+          <Box className="w-full mb-4">
+            <div {...getRootProps({ className: 'dropzone flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4 rounded-md cursor-pointer' })}>
+              <input {...getInputProps()} />
+              <MdCloudUpload size={48} style={{ color: '#7f5aff', marginBottom: '8px' }} />
+              <Typography variant="body1" color="textSecondary">Drag 'n' drop some files here, or click to select files</Typography>
+            </div>
+            {fileName && (
+              <Typography variant="body2" color="textPrimary" className="mt-2">
+                File uploaded: {fileName}
+              </Typography>
+            )}
+          </Box>
+
+          {loading && <CircularProgress />}
+          {convertedImage && (
+            <div className="flex flex-col items-center">
+              <img src={convertedImage} alt="Converted" className="mb-4" />
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<MdDownloadDone />}
+                href={convertedImage}
+                download={`converted.${conversionType}`}
+                sx={{
+                  padding: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  backgroundColor: '#7f5aff', // pastel purple
+                  '&:hover': { backgroundColor: '#6a42d3' },
+                  position: 'relative',
+                }}
+              >
+                Download
+              </Button>
+            </div>
           )}
-        </Box>
-
-        {loading && <CircularProgress />}
-        {convertedImage && (
-          <div className='flex flex-col items-center gap-4'>
-            <img src={convertedImage} alt="Converted" />
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{
-                padding: '12px',
-                textTransform: 'none',
-                fontWeight: 600,
-                backgroundColor: '#7f5aff', // pastel purple
-                '&:hover': { backgroundColor: '#6a42d3' },
-                position: 'relative',
-              }}
-              startIcon={<MdDownloadDone />}
-              href={convertedImage}
-              download={`converted.${conversionType}`}
-            >
-              Download
-            </Button>
-          </div>
-        )}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          size="large"
-          fullWidth
-          sx={{
-            padding: '12px',
-            textTransform: 'none',
-            fontWeight: 600,
-            backgroundColor: '#7f5aff', // pastel purple
-            '&:hover': { backgroundColor: '#6a42d3' },
-            position: 'relative',
-          }}
-        >
-          Convert
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            fullWidth
+            sx={{
+              padding: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: '#7f5aff', // pastel purple
+              '&:hover': { backgroundColor: '#6a42d3' },
+              position: 'relative',
+            }}
+          >
+            Convert
+          </Button>
+        </form>
+      </motion.div>
     </main>
   );
 }
