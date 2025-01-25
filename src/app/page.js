@@ -1,22 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, TextField, Typography, Box, CircularProgress, FormControl, InputLabel, Select, MenuItem, } from '@mui/material';
+import { Button, Typography, Box, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { MdCloudUpload, MdCached, MdDownloadDone } from 'react-icons/md';
+import { useDropzone } from 'react-dropzone';
 
 export default function Home() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [conversionType, setConversionType] = useState('ico');
   const [convertedImage, setConvertedImage] = useState(null);
+  const [fileName, setFileName] = useState('');
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const onDrop = (acceptedFiles) => {
+    const file = acceptedFiles[0];
     const reader = new FileReader();
     reader.onloadend = () => setImage(reader.result);
     reader.readAsDataURL(file);
+    setFileName(file.name);
     setConvertedImage(null);
   };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: 'image/*'
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,19 +42,16 @@ export default function Home() {
       body: JSON.stringify({ image }),
     });
 
-    setLoading(false);
-
     if (response.ok) {
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       setConvertedImage(url);
     } else {
-      alert('Failed to convert the image');
+      const errorData = await response.json();
+      alert(errorData.error);
     }
-  };
 
-  const handleConversionChange = (e) => {
-    setConversionType(e.target.value);
+    setLoading(false);
   };
 
   return (
@@ -87,7 +92,7 @@ export default function Home() {
             <InputLabel>Conversion Type</InputLabel>
             <Select
               value={conversionType}
-              onChange={handleConversionChange}
+              onChange={(e) => setConversionType(e.target.value)}
               label="Conversion Type"
               className="text-gray-800"
             >
@@ -103,77 +108,59 @@ export default function Home() {
 
         {/* File Input */}
         <Box className="w-full mb-4">
-          <TextField
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            fullWidth
-            variant="outlined"
-            helperText="Select an image to convert"
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <MdCloudUpload size={24} style={{ color: '#7f5aff', marginRight: '8px' }} />
-              ),
-            }}
-            className="border-2 border-gray-300 focus:border-purple-500"
-          />
+          <div {...getRootProps({ className: 'dropzone flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4 rounded-md cursor-pointer' })}>
+            <input {...getInputProps()} />
+            <MdCloudUpload size={48} style={{ color: '#7f5aff', marginBottom: '8px' }} />
+            <Typography variant="body1" color="textSecondary">Drag 'n' drop some files here, or click to select files</Typography>
+          </div>
+          {fileName && (
+            <Typography variant="body2" color="textPrimary" className="mt-2">
+              File uploaded: {fileName}
+            </Typography>
+          )}
         </Box>
 
-        {/* Submit Button */}
-        <Box className="w-full flex justify-center">
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            size="large"
-            fullWidth
-            sx={{
-              padding: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              backgroundColor: '#7f5aff', // pastel purple
-              '&:hover': { backgroundColor: '#6a42d3' },
-              position: 'relative',
-            }}
-            disabled={loading}
-          >
-            {loading ? (
-              <CircularProgress size={24} sx={{ position: 'absolute' }} />
-            ) : (
-              <>
-                <MdCached size={24} style={{ marginRight: '8px' }} />
-                Convert
-              </>
-            )}
-          </Button>
-        </Box>
+        {loading && <CircularProgress />}
+        {convertedImage && (
+          <div className='flex flex-col items-center gap-4'>
+            <img src={convertedImage} alt="Converted" />
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{
+                padding: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                backgroundColor: '#7f5aff', // pastel purple
+                '&:hover': { backgroundColor: '#6a42d3' },
+                position: 'relative',
+              }}
+              startIcon={<MdDownloadDone />}
+              href={convertedImage}
+              download={`converted.${conversionType}`}
+            >
+              Download
+            </Button>
+          </div>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          size="large"
+          fullWidth
+          sx={{
+            padding: '12px',
+            textTransform: 'none',
+            fontWeight: 600,
+            backgroundColor: '#7f5aff', // pastel purple
+            '&:hover': { backgroundColor: '#6a42d3' },
+            position: 'relative',
+          }}
+        >
+          Convert
+        </Button>
       </form>
-
-      {/* Success Message and Download Link */}
-      {convertedImage && !loading && (
-        <Box mt={4} className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-md z-[1]">
-          <MdDownloadDone size={40} style={{ color: '#66bb6a' }} />
-          <Typography variant="h6" className="ml-2 text-green-500 font-semibold">
-            Conversion Complete! Click below to download.
-          </Typography>
-          <Button
-            variant="contained"
-            color="success"
-            href={convertedImage}
-            download={`converted.${conversionType}`}
-            sx={{
-              marginTop: '10px',
-              padding: '10px 20px',
-              textTransform: 'none',
-              backgroundColor: '#66bb6a',
-              '&:hover': { backgroundColor: '#388e3c' },
-            }}
-          >
-            Download Converted Image
-          </Button>
-        </Box>
-      )}
     </main>
   );
 }
